@@ -43,6 +43,10 @@
         
         #toast { visibility: hidden; opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #toast.show { visibility: visible; opacity: 1; transform: translate(-50%, -10px); }
+
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: #0f172a; border-radius: 8px; }
+        textarea::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; }
     </style>
 </head>
 <body class="text-slate-800 flex flex-col min-h-screen">
@@ -203,20 +207,20 @@
                         </div>
                     </div>
 
-                    <!-- الأسئلة الديناميكية -->
-                    <div class="pt-4 border-t border-slate-100">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-bold text-dark flex items-center gap-2">
-                                <i class="ph-bold ph-list-numbers text-primary"></i> قائمة الأسئلة (<span id="admin-questions-count">1</span>)
-                            </h3>
-                            <button type="button" onclick="adminAddQuestionField()" class="bg-sky-50 hover:bg-primary text-primary hover:text-white px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-1">
-                                <i class="ph-bold ph-plus"></i> إضافة سؤال جديد
-                            </button>
-                        </div>
-
-                        <div id="admin-questions-list" class="space-y-6">
-                            <!-- حقول الأسئلة -->
-                        </div>
+                    <!-- الاستيراد السريع JSON -->
+                    <div class="pt-6 mt-6 border-t border-slate-100">
+                        <h3 class="text-lg font-bold text-dark mb-2 flex items-center gap-2">
+                            <i class="ph-bold ph-code text-primary"></i> إضافة الأسئلة دفعة واحدة (Bulk Import)
+                        </h3>
+                        <p class="text-xs text-slate-500 mb-4">انسخ كود الأسئلة (JSON) الذي ولّده الذكاء الاصطناعي والصقه هنا لإضافة الامتحان بخطوة واحدة.</p>
+                        
+                        <textarea id="admin-bulk-json" required rows="8" class="w-full bg-slate-900 text-green-400 border border-slate-800 rounded-2xl py-4 px-5 font-mono text-sm focus:outline-none focus:border-primary shadow-inner" dir="ltr" placeholder='[
+  {
+    "q": "1. Question text here?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct": 0
+  }
+]'></textarea>
                     </div>
 
                     <div class="pt-6 border-t border-slate-100 flex justify-end gap-3">
@@ -513,7 +517,6 @@
             loadSavedProfile();
             renderSubjects();
             populateAdminSubjects();
-            adminAddQuestionField();
             showView('home-view');
         });
 
@@ -524,7 +527,10 @@
                 if (el) el.classList.add('hidden');
             });
             const target = document.getElementById(viewId);
-            if (target) target.classList.remove('hidden');
+            if (target) {
+                target.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
             if (viewId !== 'quiz-view' && examTimer) clearInterval(examTimer);
         }
 
@@ -553,98 +559,49 @@
             });
         }
 
-        let adminQCount = 0;
-        function adminAddQuestionField() {
-            adminQCount++;
-            const container = document.getElementById('admin-questions-list');
-            const qDiv = document.createElement('div');
-            qDiv.className = "bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-4 admin-q-item";
-            qDiv.id = `admin-q-${adminQCount}`;
-            qDiv.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <span class="font-bold text-dark text-sm">السؤال #${adminQCount}</span>
-                    ${adminQCount > 1 ? `<button type="button" onclick="this.closest('.admin-q-item').remove(); updateAdminQCounter();" class="text-red-500 hover:text-red-700 text-xs font-bold">حذف السؤال</button>` : ''}
-                </div>
-                <div>
-                    <input type="text" required placeholder="Question text (in English)..." class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 font-english text-sm focus:outline-none focus:border-primary admin-q-text">
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="flex items-center gap-2">
-                        <input type="radio" name="admin-correct-${adminQCount}" value="0" checked class="w-4 h-4 text-primary">
-                        <input type="text" required placeholder="Option A..." class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 font-english text-xs md:text-sm admin-opt-0">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="radio" name="admin-correct-${adminQCount}" value="1" class="w-4 h-4 text-primary">
-                        <input type="text" required placeholder="Option B..." class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 font-english text-xs md:text-sm admin-opt-1">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="radio" name="admin-correct-${adminQCount}" value="2" class="w-4 h-4 text-primary">
-                        <input type="text" required placeholder="Option C..." class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 font-english text-xs md:text-sm admin-opt-2">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="radio" name="admin-correct-${adminQCount}" value="3" class="w-4 h-4 text-primary">
-                        <input type="text" required placeholder="Option D..." class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 font-english text-xs md:text-sm admin-opt-3">
-                    </div>
-                </div>
-            `;
-            container.appendChild(qDiv);
-            updateAdminQCounter();
-        }
-
-        function updateAdminQCounter() {
-            const count = document.querySelectorAll('.admin-q-item').length;
-            document.getElementById('admin-questions-count').textContent = count;
-        }
-
         function handleSaveNewExam(e) {
             e.preventDefault();
             const subjectId = document.getElementById('admin-subject-select').value;
             const examTitle = document.getElementById('admin-exam-title').value.trim();
-            const qItems = document.querySelectorAll('.admin-q-item');
+            const jsonText = document.getElementById('admin-bulk-json').value.trim();
 
-            let questions = [];
-            qItems.forEach((item, idx) => {
-                const qText = item.querySelector('.admin-q-text').value.trim();
-                const optA = item.querySelector('.admin-opt-0').value.trim();
-                const optB = item.querySelector('.admin-opt-1').value.trim();
-                const optC = item.querySelector('.admin-opt-2').value.trim();
-                const optD = item.querySelector('.admin-opt-3').value.trim();
-                const correctRadio = item.querySelector(`input[type="radio"]:checked`);
-                const correct = correctRadio ? parseInt(correctRadio.value) : 0;
-
-                questions.push({
-                    q: `${idx + 1}. ${qText}`,
-                    options: [optA, optB, optC, optD],
-                    correct: correct
-                });
-            });
-
-            if (questions.length === 0) {
-                showToast("يرجى إضافة سؤال واحد على الأقل");
+            if (!jsonText) {
+                showToast("يرجى لصق كود الأسئلة في المربع المخصص!");
                 return;
             }
 
-            let customDB = {};
             try {
-                customDB = JSON.parse(localStorage.getItem('babol_custom_exams_db') || '{}');
-            } catch(e) {}
+                const questionsArray = JSON.parse(jsonText);
+                
+                if (!Array.isArray(questionsArray)) {
+                    showToast("عذراً، يجب أن يكون الكود المدخل بصيغة مصفوفة [Array]");
+                    return;
+                }
 
-            if (!customDB[subjectId]) customDB[subjectId] = [];
-            customDB[subjectId].push({
-                examId: Date.now(),
-                examTitle: examTitle,
-                questions: questions
-            });
+                let customDB = {};
+                try {
+                    customDB = JSON.parse(localStorage.getItem('babol_custom_exams_db') || '{}');
+                } catch(err) {}
 
-            localStorage.setItem('babol_custom_exams_db', JSON.stringify(customDB));
+                if (!customDB[subjectId]) customDB[subjectId] = [];
+                customDB[subjectId].push({
+                    examId: Date.now(),
+                    examTitle: examTitle,
+                    questions: questionsArray
+                });
 
-            showToast("تم نشر الامتحان بنجاح!");
-            document.getElementById('add-exam-form').reset();
-            document.getElementById('admin-questions-list').innerHTML = '';
-            adminQCount = 0;
-            adminAddQuestionField();
-            renderSubjects();
-            showView('home-view');
+                localStorage.setItem('babol_custom_exams_db', JSON.stringify(customDB));
+
+                showToast(`تم نشر الامتحان بنجاح! (${questionsArray.length} سؤال)`);
+                
+                document.getElementById('add-exam-form').reset();
+                renderSubjects();
+                showView('home-view');
+
+            } catch(error) {
+                showToast("يوجد خطأ في صيغة الكود (Invalid JSON). تأكد من نسخ الكود كاملاً.");
+                console.error(error);
+            }
         }
 
         function loadSavedProfile() {

@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الاختبارات - جامعة بابول للعلوم الطبية</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- خط تجوال العربي وخط Inter للمصطلحات الإنجليزية -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- أيقونات Phosphor -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Tajawal', 'sans-serif'],
+                        en: ['Inter', 'sans-serif']
+                    },
+                    colors: {
+                        primary: '#0284c7',
+                        secondary: '#0d9488',
+                        dark: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #f8fafc; font-family: 'Tajawal', sans-serif; -webkit-font-smoothing: antialiased; }
+        .font-english { font-family: 'Inter', sans-serif; }
+        .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); }
+        
+        .option-btn { transition: all 0.2s ease-in-out; border: 2px solid #e2e8f0; }
+        .option-btn:hover:not(:disabled) { border-color: #0284c7; background-color: #f0f9ff; }
+        .option-btn.selected { border-color: #0284c7; background-color: #e0f2fe; box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.15); }
+        
+        #toast { visibility: hidden; opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #toast.show { visibility: visible; opacity: 1; transform: translate(-50%, -10px); }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen">
+
+    <!-- شريط التنقل العلوي -->
+    <header class="glass-nav sticky top-0 z-50 w-full transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="showView('home-view')">
+                    <div class="bg-gradient-to-br from-primary to-secondary p-2.5 rounded-2xl text-white shadow-md shadow-primary/20 shrink-0">
+                        <i class="ph ph-stethoscope text-2xl md:text-3xl"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-black text-lg md:text-xl text-dark leading-tight">جامعة بابول للعلوم الطبية</span>
+                        <span class="text-xs md:text-sm text-slate-500 font-bold">International Medical Students <span class="text-primary font-black">MBBS</span> - Babol</span>
+                    </div>
+                </div>
+                
+                <!-- زر الدخول للزوار -->
+                <div id="auth-menu" class="flex items-center">
+                    <button onclick="showView('auth-view')" class="flex items-center gap-2 bg-primary hover:bg-sky-700 text-white px-5 md:px-6 py-2.5 rounded-full font-bold transition-all shadow-sm active:scale-95 text-sm md:text-base">
+                        <span>دخول / تسجيل</span>
+                        <i class="ph-bold ph-sign-in text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- قائمة الطالب المسجل -->
+                <div id="user-menu" class="hidden items-center gap-3">
+                    <button onclick="showDashboard()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 md:px-5 py-2 rounded-full font-bold transition-all text-sm md:text-base">
+                        <i class="ph ph-user-circle text-xl text-primary"></i> 
+                        <span id="display-user-name">الطالب</span>
+                    </button>
+                    <button onclick="logout()" class="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors" title="تسجيل الخروج">
+                        <i class="ph ph-sign-out text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- الشاشة الرئيسية -->
+    <main id="home-view" class="flex-grow flex flex-col">
+        <div class="flex-grow">
+            <section class="relative pt-10 pb-14 overflow-hidden">
+                <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-primary/10 blur-3xl z-0"></div>
+                <div class="relative z-10 max-w-7xl mx-auto px-4 text-center">
+                    <span class="inline-block bg-sky-100 text-primary font-bold text-xs md:text-sm px-4 py-1.5 rounded-full mb-4">MBBS Online Question Bank & Self-Assessment</span>
+                    <h1 class="text-3xl md:text-5xl font-black text-dark mb-4 tracking-tight">منصة الاختبارات الطبية للطلبة الدوليين</h1>
+                    <p class="text-slate-600 max-w-2xl mx-auto mb-8 font-medium">اختر المادة والمحاضرة لبدء حل الأسئلة المنهجية باللغة الإنجليزية ومراجعة إجاباتك.</p>
+                    
+                    <div class="max-w-md mx-auto relative">
+                        <i class="ph ph-magnifying-glass absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xl"></i>
+                        <input type="text" id="searchInput" onkeyup="filterSubjects()" placeholder="ابحث عن مادة..." class="w-full bg-white border border-slate-200 rounded-full py-3.5 pr-12 pl-4 font-medium focus:outline-none focus:border-primary shadow-sm">
+                    </div>
+                </div>
+            </section>
+            
+            <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-xl md:text-2xl font-black text-dark flex items-center gap-2">
+                        <i class="ph-fill ph-books text-primary text-2xl"></i> المقررات الدراسية (<span id="count">16</span>)
+                    </h2>
+                </div>
+                <div id="subjects-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- المقررات -->
+                </div>
+            </section>
+        </div>
+
+        <!-- تذييل الموقع -->
+        <footer class="bg-white border-t border-slate-200 py-8 mt-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-primary border border-slate-100 shadow-sm">
+                            <i class="ph-fill ph-graduation-cap text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-extrabold text-dark">جامعة بابول للعلوم الطبية</p>
+                            <p class="text-xs text-slate-500 font-medium">Babol University of Medical Sciences</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center md:text-left bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
+                        <p class="text-xs text-slate-500 mb-1 font-bold">تم التطوير والإعداد بواسطة:</p>
+                        <p class="font-extrabold text-primary flex items-center justify-center md:justify-start gap-2">
+                            <i class="ph-fill ph-code"></i> محمد خالد الحمدان
+                        </p>
+                        <a href="mailto:mohammed.khaled.iran@gmail.com" class="text-xs text-slate-400 hover:text-primary transition-colors flex items-center justify-center md:justify-start gap-1 mt-1 font-mono">
+                            <i class="ph-fill ph-envelope-simple"></i> mohammed.khaled.iran@gmail.com
+                        </a>
+                    </div>
+                </div>
+                <div class="text-center mt-8 pt-6 border-t border-slate-100 text-xs text-slate-400 font-medium">
+                    &copy; 2026 جميع الحقوق محفوظة - منصة تقييم الطلبة الدوليين MBBS.
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- شاشة اختيار المحاضرة / الامتحان -->
+    <main id="exam-select-view" class="flex-grow hidden bg-slate-50 py-12">
+        <div class="max-w-3xl mx-auto px-4">
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-2xl font-black text-dark" id="select-subject-name">Subject Name</h2>
+                        <p class="text-slate-500 text-sm font-medium mt-1">اختر المحاضرة أو الامتحان المطلوب للبدء:</p>
+                    </div>
+                    <button onclick="showView('home-view')" class="text-slate-400 hover:text-slate-600 p-2.5 bg-slate-100 rounded-full">
+                        <i class="ph-bold ph-x text-xl"></i>
+                    </button>
+                </div>
+                <div id="exams-list-container" class="space-y-4">
+                    <!-- امتحانات المادة -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- شاشة تسجيل الدخول -->
+    <main id="auth-view" class="flex-grow hidden flex items-center justify-center py-12 px-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-xl border border-slate-100 relative">
+            <button onclick="showView('home-view')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-2 bg-slate-50 rounded-full">
+                <i class="ph-bold ph-x text-xl"></i>
+            </button>
+            <div class="text-center mb-8 mt-2">
+                <div class="w-16 h-16 mx-auto bg-sky-50 text-primary rounded-2xl flex items-center justify-center text-3xl mb-4">
+                    <i class="ph-fill ph-lock-key"></i>
+                </div>
+                <h2 class="text-2xl font-black text-dark" id="auth-title">تسجيل الدخول</h2>
+                <p class="text-slate-500 mt-1 text-sm font-medium">سجل حسابك لتتمكن من حفظ نتائجك وسجل اختباراتك</p>
+            </div>
+            <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-4">
+                <div id="name-field" class="hidden">
+                    <label class="block text-sm font-bold text-slate-700 mb-1">الاسم الكامل</label>
+                    <input type="text" id="auth-name" placeholder="Full Name" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">اسم المستخدم</label>
+                    <input type="text" id="auth-username" required placeholder="username" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-primary font-mono" dir="ltr">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">كلمة المرور</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-primary font-mono" dir="ltr">
+                </div>
+                <button type="submit" id="auth-submit-btn" class="w-full bg-primary hover:bg-sky-700 text-white font-bold py-3.5 rounded-xl transition-all flex justify-center items-center gap-2 mt-6 active:scale-95">
+                    <span>دخول</span> <i class="ph-bold ph-sign-in"></i>
+                </button>
+            </form>
+            <div class="mt-6 text-center border-t border-slate-100 pt-6">
+                <p class="text-slate-500 text-sm">
+                    <span id="auth-toggle-text">ليس لديك حساب؟</span>
+                    <button onclick="toggleAuthMode()" id="auth-toggle-btn" class="text-primary font-bold hover:underline">إنشاء حساب جديد</button>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- شاشة الاختبار النشط (باللغة الإنجليزية) -->
+    <main id="quiz-view" class="flex-grow hidden bg-slate-50">
+        <div class="max-w-3xl mx-auto px-4 py-8">
+            <div class="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-200 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 id="quiz-title" class="font-black text-lg md:text-xl text-dark">Subject</h2>
+                        <p id="quiz-subtitle" class="text-xs md:text-sm text-primary font-bold">Lecture title</p>
+                    </div>
+                    <div class="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold font-mono">
+                        <i class="ph-fill ph-timer text-xl"></i>
+                        <span id="timer-display">00:00</span>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div id="progress-bar" class="bg-primary h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-xs md:text-sm text-slate-500 mt-2 font-bold font-english" dir="ltr">
+                    <span id="question-counter">Question 1 of 50</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 mb-6 min-h-[320px] flex flex-col justify-between">
+                <div dir="ltr" class="font-english">
+                    <h3 id="question-text" class="text-base md:text-lg font-semibold text-slate-900 leading-relaxed mb-6">Question text goes here...</h3>
+                    <div id="options-container" class="space-y-3">
+                        <!-- الخيارات -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <button onclick="prevQuestion()" id="prev-btn" class="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 transition-colors hidden">
+                    <i class="ph-bold ph-arrow-right ml-2 inline"></i> Previous
+                </button>
+                <button onclick="nextQuestion()" id="next-btn" class="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-sky-700 transition-colors mr-auto">
+                    Next <i class="ph-bold ph-arrow-left mr-2 inline"></i>
+                </button>
+                <button onclick="submitQuiz()" id="submit-btn" class="px-8 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors mr-auto hidden">
+                    Submit Exam <i class="ph-bold ph-check-circle mr-2 inline"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- شاشة النتيجة -->
+    <main id="result-view" class="flex-grow hidden flex items-center justify-center py-12">
+        <div class="bg-white rounded-3xl p-8 md:p-10 max-w-md w-full mx-4 shadow-xl text-center border border-slate-100">
+            <div id="result-icon" class="w-24 h-24 mx-auto rounded-3xl bg-emerald-100 flex items-center justify-center text-emerald-600 text-5xl mb-6 shadow-inner">
+                <i class="ph-fill ph-trophy"></i>
+            </div>
+            <h2 class="text-3xl font-black text-dark mb-1">اكتمل الاختبار!</h2>
+            <p class="text-slate-500 font-medium text-sm mb-6" id="result-subject">المادة</p>
+            
+            <div class="bg-slate-50 rounded-2xl p-6 mb-6 border border-slate-100">
+                <span class="block text-xs text-slate-400 font-bold uppercase mb-1">Your Score</span>
+                <div class="text-5xl font-black text-primary mb-2 font-mono">
+                    <span id="score-correct">0</span><span class="text-2xl text-slate-300">/</span><span id="score-total" class="text-2xl text-slate-400">50</span>
+                </div>
+                <p id="score-message" class="font-bold text-sm"></p>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="showReview()" class="w-full bg-amber-50 text-amber-700 border border-amber-200 font-bold py-3.5 rounded-xl hover:bg-amber-100 transition-colors flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-list-magnifying-glass text-xl"></i> Review All Answers (مراجعة الإجابات)
+                </button>
+                <button onclick="showDashboard()" class="w-full bg-primary text-white font-bold py-3.5 rounded-xl hover:bg-sky-700 transition-colors">
+                    سجل درجاتي
+                </button>
+                <button onclick="showView('home-view')" class="w-full bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl hover:bg-slate-200 transition-colors">
+                    العودة للرئيسية
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- شاشة مراجعة الإجابات -->
+    <main id="review-view" class="flex-grow hidden bg-slate-50 py-12">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-black text-dark mb-1">Exam Review & Correct Answers</h2>
+                    <p class="text-slate-500 font-medium text-sm" id="review-subject-title">Subject</p>
+                </div>
+                <button onclick="showView('result-view')" class="bg-white border border-slate-200 text-slate-600 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition-colors flex items-center gap-2">
+                    العودة للنتيجة <i class="ph-bold ph-arrow-left"></i>
+                </button>
+            </div>
+            <div id="review-container" class="space-y-6" dir="ltr">
+                <!-- أسئلة المراجعة -->
+            </div>
+        </div>
+    </main>
+
+    <!-- لوحة سجل درجات الطالب -->
+    <main id="dashboard-view" class="flex-grow hidden bg-slate-50 py-12">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-8 pb-6 border-b border-slate-100">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center text-primary text-3xl shrink-0">
+                            <i class="ph-fill ph-student"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-black text-dark" id="dash-name">اسم الطالب</h2>
+                            <p class="text-slate-500 font-medium text-sm font-mono" id="dash-username">@username</p>
+                        </div>
+                    </div>
+                    <button onclick="showView('home-view')" class="bg-slate-100 text-slate-600 px-5 py-2 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm">
+                        الرئيسية
+                    </button>
+                </div>
+
+                <h3 class="text-xl font-bold text-dark mb-6 flex items-center gap-2">
+                    <i class="ph-fill ph-exam text-primary"></i> سجل الاختبارات المنجزة
+                </h3>
+
+                <div id="results-history" class="space-y-4">
+                    <!-- تاريخ النتائج -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- الإشعارات المنبثقة -->
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3.5 rounded-2xl shadow-2xl font-bold flex items-center gap-3 z-50 text-sm md:text-base border border-slate-700">
+        <i class="ph-fill ph-info text-sky-400 text-xl"></i>
+        <span id="toast-msg">رسالة</span>
+    </div>
+
+    <!-- المنطق البرمجي والأسئلة الإنجليزية (مع توزيع عشوائي للإجابات A, B, C, D) -->
+    <script>
+        const subjectsData = [
+            { id: 1, en: "Biochemistry", ar: "الكيمياء الحيوية", type: "عملي", icon: "ph-flask", color: "emerald" },
+            { id: 2, en: "Histology", ar: "علم الأنسجة وخلايا الجسم", type: "", icon: "ph-microscope", color: "purple" },
+            { id: 3, en: "Blood Physiology", ar: "فسيولوجيا الدم ووظائف مكوناته", type: "", icon: "ph-drop", color: "red" },
+            { id: 4, en: "Islamic Thought", ar: "الفكر الإسلامي والثقافة العامة", type: "", icon: "ph-book-open", color: "amber" },
+            { id: 5, en: "Heart Physiology", ar: "فسيولوجيا القلب والجهد العضلي", type: "", icon: "ph-heartbeat", color: "rose" },
+            { id: 6, en: "English", ar: "اللغة الإنجليزية والمصطلحات الطبية", type: "", icon: "ph-translate", color: "blue" },
+            { id: 7, en: "Blood Circulation Physiology", ar: "فسيولوجيا الدورة الدموية وضغط الدم", type: "", icon: "ph-activity", color: "red" },
+            { id: 8, en: "Digestive Anatomy", ar: "تشريح الجهاز الهضمي وملحقاته", type: "", icon: "ph-bandaids", color: "orange" },
+            { id: 9, en: "Persian", ar: "اللغة الفارسية", type: "", icon: "ph-text-aa", color: "teal" },
+            { id: 10, en: "Biochemistry", ar: "الكيمياء الحيوية (المفاهيم النظرية)", type: "نظري", icon: "ph-dna", color: "emerald" },
+            { id: 11, en: "Musculoskeletal Anatomy", ar: "تشريح الجهاز العضلي والهيكلي", type: "", icon: "ph-bone", color: "slate" },
+            { id: 12, en: "Principles of Health Services", ar: "مبادئ وأسس الخدمات الصحية", type: "", icon: "ph-first-aid-kit", color: "cyan" },
+            { id: 13, en: "Cardiovascular Anatomy & Histology", ar: "تشريح وأنسجة القلب والأوعية الدموية", type: "MBBS", icon: "ph-heart", color: "rose" },
+            { id: 14, en: "Head and Neck Anatomy", ar: "تشريح منطقة الرأس والعنق", type: "", icon: "ph-user", color: "indigo" },
+            { id: 15, en: "Digestive Physiology", ar: "فسيولوجيا ووظائف الجهاز الهضمي", type: "", icon: "ph-drop", color: "orange" },
+            { id: 16, en: "Thoracic Anatomy", ar: "تشريح القفص الصدري ومحتوياته", type: "", icon: "ph-lungs", color: "sky" }
+        ];
+
+        // 50 High-Yield MCQs in Medical English directly based on Dr. Babazadeh's lecture slides
+        // Correct answers are mixed across 0 (A), 1 (B), 2 (C), and 3 (D)
+        const questionsDB = {
+            13: [
+                {
+                    examId: 1,
+                    examTitle: "Lecture 1: Histology & Anatomy of the Circulatory System (Dr. S.Z. Babazadeh) - 50 MCQs",
+                    questions: [
+                        { 
+                            q: "1. What percentage of the total blood volume is accommodated within the systemic veins, venules, and venous sinuses?", 
+                            options: ["13%", "64%", "84%", "9%"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "2. The pulmonary circulation accounts for approximately what percentage of total blood volume?", 
+                            options: ["9%", "64%", "13%", "7%"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "3. Which layer of the heart wall represents the anatomical homologue of the Tunica Adventitia of blood vessels?", 
+                            options: ["Endocardium", "Myocardium", "Epicardium (Visceral pericardium)", "Fibrous ring"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "4. In which layer of the heart wall are the specialized Purkinje fibers of the conduction system primarily located?", 
+                            options: ["Deep within the Myocardium", "Subepicardial connective tissue", "Fibrous trigone", "Subendocardial layer"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "5. What type of epithelial lining covers the luminal surface of the endocardium and the entire vascular tree?", 
+                            options: ["Simple cuboidal epithelium", "Simple squamous epithelium (Endothelium)", "Stratified squamous non-keratinized epithelium", "Pseudostratified ciliated columnar epithelium"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "6. What is the main structural function of the Chordae Tendineae attached to the papillary muscles?", 
+                            options: ["They pump oxygenated blood directly into coronary sulci", "They initiate ventricular depolarization impulses", "They prevent AV valve cusps from prolapsing/everting into the atria during systole", "They open the semilunar valves during diastole"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "7. Which component of the cardiac conduction system uniquely penetrates the cardiac fibrous skeleton to transmit impulses to the ventricles?", 
+                            options: ["Atrioventricular (AV) Bundle of His", "Sinoatrial (SA) node", "Bachmann's interatrial bundle", "Anterior internodal tract"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "8. What is the fundamental electrophysiological role of the cardiac fibrous skeleton?", 
+                            options: ["It accelerates impulses between atria and ventricles", "It acts as an electrical insulator, preventing random wave conduction between atria and ventricles", "It secretes natriuretic peptide hormones", "It serves as the primary cardiac pacemaker"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "9. Myoendocrine cardiocytes located predominantly in the atria produce and store which regulatory hormone in cytoplasmic granules?", 
+                            options: ["Vasopressin (Antidiuretic hormone)", "Angiotensin II", "Atrial Natriuretic Factor (ANF / ANP)", "Endothelin-1"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "10. What is the primary physiological trigger for the release of ANF (Atrial Natriuretic Factor) from atrial myocytes?", 
+                            options: ["Acute systemic hypotension", "Hyperkalemia and metabolic acidosis", "Severe hypovolemia", "Atrial wall stretch and elevated blood volume/hypervolemia"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "11. What is the physiological effect of Atrial Natriuretic Factor (ANF) on the kidneys and vasculature?", 
+                            options: ["Stimulates renal sodium/water excretion (natriuresis/diuresis) and lowers blood pressure", "Promotes sodium retention and increases peripheral vascular resistance", "Stimulates renin and aldosterone secretion", "Causes systemic arterial vasoconstriction"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "12. Where is the Sinoatrial (SA) Node anatomically situated in the heart?", 
+                            options: ["In the membranous interventricular septum", "At the junction of the Superior Vena Cava and the Right Atrium", "At the base of the left pulmonary veins", "Subendocardially in the floor of the left ventricle"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "13. The Atrioventricular (AV) Node is situated in the subendocardium of the interatrial septum within which landmark area?", 
+                            options: ["Fossa ovalis", "Coronary sinus opening", "Triangle of Koch (Koch's triangle)", "Crista terminalis"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "14. How are Purkinje fibers histologically distinguished from typical contractile cardiomyocytes?", 
+                            options: ["They are smaller with intensely dark myofibrils and no glycogen", "They lack cell membranes and form syncytial smooth muscle", "They are multi-nucleated skeletal muscle fibers", "They are larger, pale-staining due to abundant glycogen, with sparse peripheral myofibrils"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "15. Which intercellular junctions are abundant in the intercalated discs of Purkinje fibers to ensure rapid electrical transmission?", 
+                            options: ["Gap junctions (Nexus)", "Zonula occludens only", "Hemidesmosomes", "Tight junctions without channels"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "16. Which layer of the pericardial sac is directly attached to the external surface of the myocardium as the Epicardium?", 
+                            options: ["Fibrous pericardium", "Visceral layer of the serous pericardium", "Parietal layer of the serous pericardium", "Endocardium"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "17. Which nerve provides sensory innervation to the pericardium and originates from spinal segments C3-C5?", 
+                            options: ["Vagus nerve (CN X)", "Sympathetic cardiac nerve", "Phrenic nerve", "Left recurrent laryngeal nerve"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "18. The subepicardial loose connective tissue of the epicardium contains variable amounts of adipose tissue that accommodates:", 
+                            options: ["Pectinate muscles and trabeculae carneae", "Chordae tendineae and valve cusps", "Endocardial endothelial cushions", "Coronary blood vessels, autonomic nerve fibers, and ganglia"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "19. Histologically, heart valves consist of a fold of endocardium enclosing a core composed predominantly of:", 
+                            options: ["Dense irregular fibroelastic connective tissue", "Hyaline cartilage and bony lamellae", "Thick skeletal muscle fibers", "Simple adipose tissue without collagen"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "20. In the vascular wall architecture, where is the Internal Elastic Lamina (IEL) located?", 
+                            options: ["Between Tunica Media and Tunica Adventitia", "At the boundary between Tunica Intima and Tunica Media", "In the outermost layer of Tunica Adventitia", "Deep within the capillary basement membrane"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "21. Which cells in the Tunica Media of muscular arteries synthesize collagen, elastin, and extracellular ground substance?", 
+                            options: ["Endothelial cells", "Pericytes", "Vascular smooth muscle cells", "Adventitial fibroblasts only"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "22. What are the 'Vasa Vasorum' and in which vascular layer are they most prominent in large vessels?", 
+                            options: ["Lymphatic capillaries in the endothelium", "Smooth muscle sphincters of arterioles", "Nerve endings in the subendothelial zone", "A microvascular network supplying vessel walls, located primarily in the Tunica Adventitia"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "23. Unmyelinated sympathetic nerve fibers (Nervi Vasorum) in the adventitia of arteries release norepinephrine to stimulate:", 
+                            options: ["Vasoconstriction via vascular smooth muscle contraction", "Vasodilation of large conducting arteries", "Immediate breakdown of the internal elastic lamina", "Proliferation of endothelial cells"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "24. Rod-shaped cytoplasmic inclusion bodies unique to endothelial cells that store von Willebrand Factor (vWF) and P-selectin are called:", 
+                            options: ["Caveolae", "Weibel-Palade bodies", "Nissl granules", "Dense core neurosecretory granules"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "25. Which potent vasodilator is synthesized and released by vascular endothelial cells to relax underlying smooth muscle?", 
+                            options: ["Endothelin-1", "Thromboxane A2", "Nitric Oxide (NO)", "Angiotensin Converting Enzyme (ACE)"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "26. Which of the following is a potent vasoconstrictor peptide synthesized and secreted by endothelial cells?", 
+                            options: ["Prostacyclin (PGI2)", "Heparan sulfate", "Bradykinin", "Endothelin-1"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "27. What is the hallmark histological feature of the Tunica Media in Large Elastic (Conducting) Arteries like the Aorta?", 
+                            options: ["Concentric sheets of 40 to 70 fenestrated elastic lamellae interspersed with smooth muscle", "Absence of elastic fibers with purely skeletal muscle", "Single layer of smooth muscle and absence of intima", "Abundant venous valves within the lumen"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "28. What is the essential biomechanical role of the elastic recoil (Windkessel effect) in elastic arteries during cardiac diastole?", 
+                            options: ["To generate cardiac electrical pacemaking", "To maintain continuous peripheral blood flow and arterial diastolic blood pressure", "To produce red blood cells under high pressure", "To filter lymph returning to the heart"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "29. In which category of blood vessels is the Internal Elastic Lamina (IEL) most prominent, thick, and distinctly undulating (scalloped)?", 
+                            options: ["Large elastic arteries", "Capillaries", "Medium-sized (Muscular / Distributing) Arteries", "Postcapillary venules"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "30. The Tunica Media of medium muscular arteries contains up to how many concentric layers of circularly/spirally arranged smooth muscle cells?", 
+                            options: ["Only 1 to 2 layers", "Exactly 5 layers", "Over 150 layers", "Up to 40 layers"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "31. Which microvascular vessels act as the primary site of systemic vascular resistance (resistance vessels) regulating systemic blood pressure?", 
+                            options: ["Arterioles", "Large elastic arteries", "Capillaries", "Large venae cavae"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "32. Histologically, an arteriole is characterized by a Tunica Media consisting of how many layers of smooth muscle cells?", 
+                            options: ["10 to 20 layers", "1 to 3 layers", "More than 40 layers", "No smooth muscle layers"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "33. High-pressure baroreceptors monitoring systemic arterial blood pressure are located in which anatomical structures?", 
+                            options: ["Inferior Vena Cava and Hepatic Veins", "Pulmonary veins and left atrium", "Carotid Sinus (internal carotid artery) and Aortic Arch", "Thoracic duct and subclavian veins"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "34. Sensory afferent nerve impulses from the Carotid Sinus baroreceptors are transmitted to the brainstem primarily via which cranial nerve?", 
+                            options: ["Vagus nerve (CN X) exclusively", "Facial nerve (CN VII)", "Hypoglossal nerve (CN XII)", "Glossopharyngeal nerve (CN IX / Hering's nerve)"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "35. Chemoreceptors in the Carotid and Aortic bodies monitor arterial blood changes and respond strongly to:", 
+                            options: ["Hypoxia (low pO2), hypercapnia (high pCO2), and acidosis (low pH)", "Elevated blood glucose and hypernatremia", "Decreased blood temperature only", "Elevated albumin and high blood viscosity"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "36. In the Carotid Body, which cells act as the primary neuroendocrine chemosensory cells containing catecholamine vesicles?", 
+                            options: ["Type II (Sustentacular) supporting cells", "Type I (Glomus) cells", "Pericytes of capillaries", "Fibroblasts of the capsule"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "37. What is the initial event in the pathogenesis of Atherosclerosis?", 
+                            options: ["Rupture of the chordae tendineae", "Calcification of the Tunica Adventitia", "Endothelial injury and accumulation of modified low-density lipoproteins (LDL) in the Tunica Intima", "Hypertrophy of Purkinje conduction fibers"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "38. In an atheromatous plaque, 'Foam Cells' are lipid-laden cells predominantly derived from:", 
+                            options: ["Erythrocytes and platelets", "Neutrophils and mast cells", "Endothelial cells and lymphocytes", "Macrophages and transformed vascular smooth muscle cells"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "39. What is the major clinical catastrophe resulting from ulceration or rupture of an atherosclerotic plaque (fibrous cap)?", 
+                            options: ["Thrombus formation causing acute vascular occlusion and tissue infarction", "Development of AV node bypass tract", "Excessive secretion of ANF hormone", "Transformation of the artery into a muscular vein"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "40. A localized abnormal permanent dilation of an arterial wall caused by acquired or congenital weakness of the media is termed an:", 
+                            options: ["Atheroma", "Aneurysm", "Varicocele", "Arteriosclerosis obliterans"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "41. Why are veins referred to as 'capacitance vessels' in hemodynamics?", 
+                            options: ["They generate the highest systolic blood pressure", "Their walls contain more elastic lamellae than the aorta", "They contain approximately 64-70% of total blood volume due to thin walls and large distensible lumens", "They possess continuous spontaneous peristaltic contractions"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "42. Venous valves are thin semilunar folds composed of which histological layer?", 
+                            options: ["Tunica Adventitia containing longitudinal muscle", "Tunica Media with thick circular smooth muscle", "Pericardial mesothelium", "Tunica Intima lined by endothelium with an inner core of fibroelastic tissue"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "43. In Large Veins (e.g., Inferior Vena Cava and Hepatic Portal Vein), which layer is the thickest and most well-developed, containing prominent longitudinal bundles of smooth muscle?", 
+                            options: ["Tunica Adventitia", "Tunica Media", "Tunica Intima", "Internal Elastic Lamina"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "44. Which microcirculatory vessels represent the principal site of leukocyte extravasation (diapedesis) and responsiveness to inflammatory mediators like histamine?", 
+                            options: ["Large elastic conducting arteries", "Postcapillary Venules", "Precapillary metarterioles", "Sinusoids of the liver"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "45. High Endothelial Venules (HEVs) with plump, cuboidal endothelial cells are specialized postcapillary venules found in:", 
+                            options: ["Renal glomeruli", "Adrenal medulla", "Secondary lymphoid organs (lymph nodes, tonsils, Peyer's patches) for lymphocyte homing", "Skeletal muscle interstitium"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "46. Which type of capillary possesses an unbroken endothelial lining, continuous basal lamina, tight junctions (zonula occludens), and is prominent in the Central Nervous System (Blood-Brain Barrier)?", 
+                            options: ["Sinusoidal (discontinuous) capillaries", "Fenestrated capillaries without diaphragm", "Fenestrated capillaries with diaphragm", "Continuous (non-fenestrated) capillaries"], 
+                            correct: 3 
+                        },
+                        { 
+                            q: "47. Where are Fenestrated Capillaries without diaphragms and featuring a notably thick basement membrane located?", 
+                            options: ["Renal glomeruli (Glomerular filtration barrier)", "Endocrine glands (thyroid, pituitary)", "Mucosa of the small intestine", "Exocrine pancreas"], 
+                            correct: 0 
+                        },
+                        { 
+                            q: "48. Sinusoidal (Discontinuous) capillaries with wide tortuous lumens, large endothelial gaps, and incomplete or absent basal lamina are characteristic of:", 
+                            options: ["Brain cortex and spinal cord", "Liver, Spleen, and Bone Marrow", "Skeletal and cardiac muscle", "Lungs and respiratory bronchioles"], 
+                            correct: 1 
+                        },
+                        { 
+                            q: "49. Arteriovenous Anastomoses (AV shunts / Glomus bodies) in thermoregulatory areas (fingertips, ears, nose) function primarily to:", 
+                            options: ["Facilitate nutrient absorption from tissue spaces", "Generate white blood cells during infection", "Bypass the capillary bed to regulate body temperature and blood flow", "Produce systemic vascular resistance for endocrine organs"], 
+                            correct: 2 
+                        },
+                        { 
+                            q: "50. Where does the Thoracic Duct (the main lymphatic vessel of the body) empty lymph back into the venous bloodstream?", 
+                            options: ["Directly into the Right Atrium of the heart", "Directly into the Inferior Vena Cava", "Into the Hepatic Portal Vein", "At the junction of the Left Internal Jugular and Left Subclavian Veins (Left venous angle)"], 
+                            correct: 3 
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // إدارة الحالة والتنقل
+        let currentUserProfile = null;
+        let isSignup = false;
+        let activeSubjectId = null;
+        let activeExamIndex = 0;
+        let activeQuestions = [];
+        let currentQuestionIdx = 0;
+        let userSelectedAnswers = [];
+        let examTimer = null;
+        let timeLeft = 0;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedProfile();
+            renderSubjects();
+            showView('home-view');
+        });
+
+        function showView(viewId) {
+            const views = ['home-view', 'exam-select-view', 'auth-view', 'quiz-view', 'result-view', 'review-view', 'dashboard-view'];
+            views.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(viewId);
+            if (target) target.classList.remove('hidden');
+            if (viewId !== 'quiz-view' && examTimer) clearInterval(examTimer);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function loadSavedProfile() {
+            try {
+                const saved = localStorage.getItem('babol_quiz_user');
+                if (saved) {
+                    currentUserProfile = JSON.parse(saved);
+                    document.getElementById('auth-menu').classList.replace('flex', 'hidden');
+                    document.getElementById('user-menu').classList.replace('hidden', 'flex');
+                    document.getElementById('display-user-name').textContent = currentUserProfile.name || currentUserProfile.username;
+                }
+            } catch(e) {}
+        }
+
+        function toggleAuthMode() {
+            isSignup = !isSignup;
+            document.getElementById('name-field').classList.toggle('hidden', !isSignup);
+            document.getElementById('auth-title').textContent = isSignup ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+            document.getElementById('auth-submit-btn').innerHTML = isSignup ? '<span>إنشاء الحساب</span> <i class="ph-bold ph-user-plus"></i>' : '<span>دخول</span> <i class="ph-bold ph-sign-in"></i>';
+            document.getElementById('auth-toggle-text').textContent = isSignup ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟';
+            document.getElementById('auth-toggle-btn').textContent = isSignup ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
+        }
+
+        function handleAuth(e) {
+            e.preventDefault();
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            const name = document.getElementById('auth-name').value.trim() || username;
+
+            if (!username || !password) {
+                showToast("يرجى إدخال اسم المستخدم وكلمة المرور");
+                return;
+            }
+
+            currentUserProfile = { username, name };
+            localStorage.setItem('babol_quiz_user', JSON.stringify(currentUserProfile));
+
+            document.getElementById('auth-menu').classList.replace('flex', 'hidden');
+            document.getElementById('user-menu').classList.replace('hidden', 'flex');
+            document.getElementById('display-user-name').textContent = currentUserProfile.name;
+
+            showToast(isSignup ? "تم إنشاء الحساب بنجاح!" : "تم تسجيل الدخول بنجاح!");
+            showView('home-view');
+        }
+
+        function logout() {
+            currentUserProfile = null;
+            localStorage.removeItem('babol_quiz_user');
+            document.getElementById('user-menu').classList.replace('flex', 'hidden');
+            document.getElementById('auth-menu').classList.replace('hidden', 'flex');
+            document.getElementById('auth-form').reset();
+            showToast("تم تسجيل الخروج");
+            showView('home-view');
+        }
+
+        function renderSubjects(list = subjectsData) {
+            const container = document.getElementById('subjects-container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            list.forEach(sub => {
+                const hasExams = questionsDB[sub.id] && questionsDB[sub.id].length > 0;
+                let badge = sub.type ? `<span class="bg-sky-100 text-primary text-xs font-bold px-2.5 py-0.5 rounded-lg">${sub.type}</span>` : '';
+                let statusBadge = hasExams 
+                    ? `<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5"><i class="ph-bold ph-check-circle"></i> متوفر 50 سؤال (English)</span>` 
+                    : `<span class="bg-slate-100 text-slate-400 text-xs font-bold px-2 py-0.5 rounded-lg">قريباً</span>`;
+
+                container.innerHTML += `
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-xl hover:border-sky-200 transition-all duration-300 flex flex-col justify-between h-full">
+                        <div>
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="w-12 h-12 rounded-2xl bg-${sub.color}-50 flex items-center justify-center text-${sub.color}-500 text-2xl shadow-inner">
+                                    <i class="ph-fill ${sub.icon}"></i>
+                                </div>
+                                <span class="text-slate-300 font-black text-sm">#${sub.id}</span>
+                            </div>
+                            <h3 class="text-lg font-black text-dark mb-1 flex items-center flex-wrap gap-2">${sub.en} ${badge}</h3>
+                            <p class="text-xs md:text-sm text-slate-500 mb-4 font-medium">${sub.ar}</p>
+                        </div>
+                        <div>
+                            <div class="mb-4">${statusBadge}</div>
+                            <button onclick="handleSubjectClick(${sub.id})" class="w-full bg-slate-50 hover:bg-primary text-primary hover:text-white py-3 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 border border-slate-200 hover:border-primary active:scale-95">
+                                <span>عرض الاختبارات</span> <i class="ph-bold ph-arrow-left"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('count').textContent = list.length;
+        }
+
+        function filterSubjects() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = subjectsData.filter(s => s.en.toLowerCase().includes(query) || s.ar.includes(query));
+            renderSubjects(filtered);
+        }
+
+        function handleSubjectClick(subjectId) {
+            if (!currentUserProfile) {
+                showToast("يرجى تسجيل الدخول أولاً للوصول للاختبارات وحفظ نتيجتك.");
+                showView('auth-view');
+                return;
+            }
+
+            const subject = subjectsData.find(s => s.id === subjectId);
+            const exams = questionsDB[subjectId];
+
+            if (!exams || exams.length === 0) {
+                showToast(`بنك أسئلة مادة (${subject.en}) قيد الإعداد والإضافة!`);
+                return;
+            }
+
+            activeSubjectId = subjectId;
+
+            if (exams.length === 1) {
+                startQuiz(0);
+            } else {
+                document.getElementById('select-subject-name').textContent = subject.en;
+                const listContainer = document.getElementById('exams-list-container');
+                listContainer.innerHTML = '';
+                exams.forEach((ex, idx) => {
+                    listContainer.innerHTML += `
+                        <div onclick="startQuiz(${idx})" class="p-5 rounded-2xl border-2 border-slate-100 hover:border-primary bg-slate-50/50 hover:bg-sky-50/50 cursor-pointer transition-all flex justify-between items-center group">
+                            <div>
+                                <h4 class="font-bold text-dark text-base md:text-lg group-hover:text-primary transition-colors">${ex.examTitle}</h4>
+                                <span class="text-xs text-slate-400 font-bold mt-1 inline-block">${ex.questions.length} Questions • Duration: ${ex.questions.length} Mins</span>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-white group-hover:bg-primary group-hover:text-white flex items-center justify-center text-primary shadow-sm transition-all">
+                                <i class="ph-bold ph-play"></i>
+                            </div>
+                        </div>
+                    `;
+                });
+                showView('exam-select-view');
+            }
+        }
+
+        function startQuiz(examIdx) {
+            activeExamIndex = examIdx;
+            const subject = subjectsData.find(s => s.id === activeSubjectId);
+            const exam = questionsDB[activeSubjectId][examIdx];
+            
+            activeQuestions = exam.questions;
+            currentQuestionIdx = 0;
+            userSelectedAnswers = new Array(activeQuestions.length).fill(null);
+            timeLeft = activeQuestions.length * 60;
+
+            document.getElementById('quiz-title').textContent = subject.en;
+            document.getElementById('quiz-subtitle').textContent = exam.examTitle;
+
+            startTimer();
+            showView('quiz-view');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = activeQuestions[currentQuestionIdx];
+            document.getElementById('question-counter').textContent = `Question ${currentQuestionIdx + 1} of ${activeQuestions.length}`;
+            document.getElementById('question-text').textContent = q.q;
+
+            const progress = ((currentQuestionIdx) / activeQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            const optionLetters = ['A', 'B', 'C', 'D'];
+
+            q.options.forEach((opt, idx) => {
+                const isSelected = userSelectedAnswers[currentQuestionIdx] === idx;
+                container.innerHTML += `
+                    <button onclick="selectOption(${idx})" class="option-btn w-full text-left p-4 rounded-2xl text-sm md:text-base font-medium text-slate-700 flex items-center gap-4 ${isSelected ? 'selected' : 'bg-white'}">
+                        <div class="w-7 h-7 rounded-full border-2 ${isSelected ? 'border-primary bg-primary text-white' : 'border-slate-300 text-slate-500'} flex items-center justify-center font-bold text-xs shrink-0">
+                            ${isSelected ? '<i class="ph-bold ph-check"></i>' : optionLetters[idx]}
+                        </div>
+                        <span class="leading-relaxed font-english">${opt}</span>
+                    </button>
+                `;
+            });
+
+            document.getElementById('prev-btn').classList.toggle('hidden', currentQuestionIdx === 0);
+
+            if (currentQuestionIdx === activeQuestions.length - 1) {
+                document.getElementById('next-btn').classList.add('hidden');
+                document.getElementById('submit-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('next-btn').classList.remove('hidden');
+                document.getElementById('submit-btn').classList.add('hidden');
+            }
+        }
+
+        function selectOption(idx) {
+            userSelectedAnswers[currentQuestionIdx] = idx;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIdx < activeQuestions.length - 1) {
+                currentQuestionIdx++;
+                loadQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIdx > 0) {
+                currentQuestionIdx--;
+                loadQuestion();
+            }
+        }
+
+        function startTimer() {
+            if (examTimer) clearInterval(examTimer);
+            updateTimerUI();
+            examTimer = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if (timeLeft <= 0) {
+                    clearInterval(examTimer);
+                    submitQuiz();
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const s = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').textContent = `${m}:${s}`;
+        }
+
+        function submitQuiz() {
+            if (examTimer) clearInterval(examTimer);
+
+            let score = 0;
+            activeQuestions.forEach((q, i) => {
+                if (userSelectedAnswers[i] === q.correct) score++;
+            });
+
+            document.getElementById('score-correct').textContent = score;
+            document.getElementById('score-total').textContent = activeQuestions.length;
+            
+            const subject = subjectsData.find(s => s.id === activeSubjectId);
+            const exam = questionsDB[activeSubjectId][activeExamIndex];
+            document.getElementById('result-subject').textContent = `${subject.en} • ${exam.examTitle}`;
+
+            const percentage = score / activeQuestions.length;
+            const msgEl = document.getElementById('score-message');
+            if (percentage >= 0.8) {
+                msgEl.textContent = "Outstanding Performance, Doctor! Excellent Mastery 🌟";
+                msgEl.className = "font-bold text-emerald-600";
+            } else if (percentage >= 0.5) {
+                msgEl.textContent = "Good job! Review the incorrect questions to solidify knowledge 👍";
+                msgEl.className = "font-bold text-amber-600";
+            } else {
+                msgEl.textContent = "Recommended to re-read Dr. Babazadeh's lecture slides thoroughly 📚";
+                msgEl.className = "font-bold text-red-600";
+            }
+
+            saveResultRecord({
+                subjectName: subject.en,
+                examTitle: exam.examTitle,
+                score: score,
+                total: activeQuestions.length,
+                date: new Date().toISOString()
+            });
+
+            showView('result-view');
+        }
+
+        function saveResultRecord(record) {
+            try {
+                let history = JSON.parse(localStorage.getItem('babol_quiz_history') || '[]');
+                history.unshift(record);
+                localStorage.setItem('babol_quiz_history', JSON.stringify(history));
+            } catch(e) {}
+        }
+
+        function showReview() {
+            const subject = subjectsData.find(s => s.id === activeSubjectId);
+            const exam = questionsDB[activeSubjectId][activeExamIndex];
+            document.getElementById('review-subject-title').textContent = `${subject.en} • ${exam.examTitle}`;
+
+            const container = document.getElementById('review-container');
+            container.innerHTML = '';
+
+            const optionLetters = ['A', 'B', 'C', 'D'];
+
+            activeQuestions.forEach((q, qIdx) => {
+                const userAns = userSelectedAnswers[qIdx];
+                const isCorrect = userAns === q.correct;
+
+                let optionsHtml = '';
+                q.options.forEach((opt, optIdx) => {
+                    let styleClass = 'bg-slate-50 border-slate-100 text-slate-600';
+                    let icon = `<span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs mr-3 shrink-0">${optionLetters[optIdx]}</span>`;
+
+                    if (optIdx === q.correct) {
+                        styleClass = 'bg-emerald-50 border-emerald-500 text-emerald-800 font-bold';
+                        icon = `<span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs mr-3 shrink-0"><i class="ph-bold ph-check"></i></span>`;
+                    } else if (optIdx === userAns && !isCorrect) {
+                        styleClass = 'bg-red-50 border-red-500 text-red-800 font-bold';
+                        icon = `<span class="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-xs mr-3 shrink-0"><i class="ph-bold ph-x"></i></span>`;
+                    }
+
+                    optionsHtml += `
+                        <div class="p-3.5 md:p-4 border-2 rounded-2xl mb-2.5 flex items-center ${styleClass}">
+                            ${icon}
+                            <span class="text-sm md:text-base leading-relaxed font-english">${opt}</span>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                        <div class="flex items-start gap-4 mb-4">
+                            <span class="w-10 h-10 shrink-0 rounded-2xl flex items-center justify-center font-black text-sm ${isCorrect ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">
+                                ${qIdx + 1}
+                            </span>
+                            <h3 class="font-bold text-base md:text-lg text-slate-900 leading-relaxed font-english">${q.q}</h3>
+                        </div>
+                        <div class="pl-0 md:pl-14">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            showView('review-view');
+        }
+
+        function showDashboard() {
+            if (!currentUserProfile) {
+                showToast("يرجى تسجيل الدخول أولاً");
+                showView('auth-view');
+                return;
+            }
+
+            document.getElementById('dash-name').textContent = currentUserProfile.name || currentUserProfile.username;
+            document.getElementById('dash-username').textContent = "@" + currentUserProfile.username;
+
+            const container = document.getElementById('results-history');
+            let history = [];
+            try {
+                history = JSON.parse(localStorage.getItem('babol_quiz_history') || '[]');
+            } catch(e) {}
+
+            if (history.length === 0) {
+                container.innerHTML = '<p class="text-center text-slate-400 py-10 font-bold bg-slate-50 rounded-2xl border border-slate-100">لم تقم بإجراء أي اختبار حتى الآن. ابدأ اختبارك الأول من الصفحة الرئيسية!</p>';
+            } else {
+                container.innerHTML = '';
+                history.forEach(item => {
+                    const d = new Date(item.date);
+                    const dateStr = d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const percent = Math.round((item.score / item.total) * 100);
+
+                    let color = percent >= 80 ? 'emerald' : (percent >= 50 ? 'amber' : 'red');
+
+                    container.innerHTML += `
+                        <div class="bg-white border border-slate-100 p-4 md:p-5 rounded-2xl flex items-center justify-between shadow-sm">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-${color}-50 text-${color}-600 font-black text-sm md:text-base flex items-center justify-center shrink-0">
+                                    ${percent}%
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-dark text-sm md:text-base">${item.subjectName}</h4>
+                                    <p class="text-xs text-primary font-bold">${item.examTitle}</p>
+                                    <span class="text-xs text-slate-400 font-medium">${dateStr}</span>
+                                </div>
+                            </div>
+                            <div class="text-right font-mono">
+                                <span class="text-lg md:text-xl font-black text-slate-800">${item.score} <span class="text-xs text-slate-400">/ ${item.total}</span></span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            showView('dashboard-view');
+        }
+    </script>
+</body>
+</html>
+

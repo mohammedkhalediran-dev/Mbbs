@@ -8,7 +8,7 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- خط تجوال العربي وخط Inter للمصطلحات الإنجليزية -->
+    <!-- الخطوط -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
     <!-- أيقونات Phosphor -->
@@ -61,23 +61,31 @@
                     </div>
                 </div>
                 
-                <!-- زر الدخول للزوار -->
-                <div id="auth-menu" class="flex items-center">
-                    <button onclick="showView('auth-view')" class="flex items-center gap-2 bg-primary hover:bg-sky-700 text-white px-5 md:px-6 py-2.5 rounded-full font-bold transition-all shadow-sm active:scale-95 text-sm md:text-base">
-                        <span>دخول / تسجيل</span>
-                        <i class="ph-bold ph-sign-in text-lg"></i>
+                <div class="flex items-center gap-2 md:gap-3">
+                    <!-- زر لوحة المشرف -->
+                    <button onclick="promptAdminAccess()" class="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 px-3.5 py-2 rounded-full font-bold transition-all text-xs md:text-sm border border-amber-200" title="لوحة إضافة الأسئلة">
+                        <i class="ph-bold ph-gear text-base"></i>
+                        <span class="hidden sm:inline">إدارة الأسئلة</span>
                     </button>
-                </div>
 
-                <!-- قائمة الطالب المسجل -->
-                <div id="user-menu" class="hidden items-center gap-3">
-                    <button onclick="showDashboard()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 md:px-5 py-2 rounded-full font-bold transition-all text-sm md:text-base">
-                        <i class="ph ph-user-circle text-xl text-primary"></i> 
-                        <span id="display-user-name">الطالب</span>
-                    </button>
-                    <button onclick="logout()" class="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors" title="تسجيل الخروج">
-                        <i class="ph ph-sign-out text-xl"></i>
-                    </button>
+                    <!-- زر الدخول للزوار -->
+                    <div id="auth-menu" class="flex items-center">
+                        <button onclick="showView('auth-view')" class="flex items-center gap-2 bg-primary hover:bg-sky-700 text-white px-4 md:px-5 py-2 rounded-full font-bold transition-all shadow-sm active:scale-95 text-xs md:text-sm">
+                            <span>دخول</span>
+                            <i class="ph-bold ph-sign-in text-base"></i>
+                        </button>
+                    </div>
+
+                    <!-- قائمة الطالب المسجل -->
+                    <div id="user-menu" class="hidden items-center gap-2">
+                        <button onclick="showDashboard()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 md:px-4 py-2 rounded-full font-bold transition-all text-xs md:text-sm">
+                            <i class="ph ph-user-circle text-lg text-primary"></i> 
+                            <span id="display-user-name">الطالب</span>
+                        </button>
+                        <button onclick="logout()" class="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors" title="تسجيل الخروج">
+                            <i class="ph ph-sign-out text-lg"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -163,6 +171,64 @@
         </div>
     </main>
 
+    <!-- شاشة لوحة تحكم المشرف (Admin Dashboard) -->
+    <main id="admin-view" class="flex-grow hidden bg-slate-50 py-10">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-slate-100 gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-lg">Admin Panel</span>
+                            <h2 class="text-2xl font-black text-dark">لوحة إدارة بنك الأسئلة</h2>
+                        </div>
+                        <p class="text-slate-500 text-sm mt-1">أضف اختبارات ومحاضرات جديدة للمواد لتظهر لجميع الطلاب مباشرة.</p>
+                    </div>
+                    <button onclick="showView('home-view')" class="bg-slate-100 text-slate-600 px-5 py-2 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm">
+                        خروج من الإدارة
+                    </button>
+                </div>
+
+                <form id="add-exam-form" onsubmit="handleSaveNewExam(event)" class="mt-6 space-y-6">
+                    <!-- اختيار المادة -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">المادة الدراسية (Subject):</label>
+                            <select id="admin-subject-select" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-700 focus:outline-none focus:border-primary">
+                                <!-- تملأ برمجياً -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">عنوان المحاضرة / الامتحان (بالإنجليزية):</label>
+                            <input type="text" id="admin-exam-title" required placeholder="e.g., Lecture 2: Blood Physiology" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-english focus:outline-none focus:border-primary">
+                        </div>
+                    </div>
+
+                    <!-- الأسئلة الديناميكية -->
+                    <div class="pt-4 border-t border-slate-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-dark flex items-center gap-2">
+                                <i class="ph-bold ph-list-numbers text-primary"></i> قائمة الأسئلة (<span id="admin-questions-count">1</span>)
+                            </h3>
+                            <button type="button" onclick="adminAddQuestionField()" class="bg-sky-50 hover:bg-primary text-primary hover:text-white px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-1">
+                                <i class="ph-bold ph-plus"></i> إضافة سؤال جديد
+                            </button>
+                        </div>
+
+                        <div id="admin-questions-list" class="space-y-6">
+                            <!-- حقول الأسئلة -->
+                        </div>
+                    </div>
+
+                    <div class="pt-6 border-t border-slate-100 flex justify-end gap-3">
+                        <button type="submit" class="bg-primary hover:bg-sky-700 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-md active:scale-95 flex items-center gap-2 text-base">
+                            <i class="ph-bold ph-floppy-disk"></i> حفظ ونشر الامتحان
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
     <!-- شاشة تسجيل الدخول -->
     <main id="auth-view" class="flex-grow hidden flex items-center justify-center py-12 px-4">
         <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-xl border border-slate-100 relative">
@@ -202,7 +268,7 @@
         </div>
     </main>
 
-    <!-- شاشة الاختبار النشط (باللغة الإنجليزية) -->
+    <!-- شاشة الاختبار النشط -->
     <main id="quiz-view" class="flex-grow hidden bg-slate-50">
         <div class="max-w-3xl mx-auto px-4 py-8">
             <div class="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-200 mb-6">
@@ -332,8 +398,10 @@
         <span id="toast-msg">رسالة</span>
     </div>
 
-    <!-- المنطق البرمجي والأسئلة الإنجليزية (مع توزيع عشوائي للإجابات A, B, C, D) -->
+    <!-- المنطق البرمجي ونظام الإدارة الديناميكي -->
     <script>
+        const ADMIN_PIN = "8430";
+
         const subjectsData = [
             { id: 1, en: "Biochemistry", ar: "الكيمياء الحيوية", type: "عملي", icon: "ph-flask", color: "emerald" },
             { id: 2, en: "Histology", ar: "علم الأنسجة وخلايا الجسم", type: "", icon: "ph-microscope", color: "purple" },
@@ -353,270 +421,84 @@
             { id: 16, en: "Thoracic Anatomy", ar: "تشريح القفص الصدري ومحتوياته", type: "", icon: "ph-lungs", color: "sky" }
         ];
 
-        // 50 High-Yield MCQs in Medical English directly based on Dr. Babazadeh's lecture slides
-        // Correct answers are mixed across 0 (A), 1 (B), 2 (C), and 3 (D)
-        const questionsDB = {
+        // 50 High-Yield MCQs (Cardiovascular Histology & Anatomy)
+        const builtInQuestionsDB = {
             13: [
                 {
                     examId: 1,
                     examTitle: "Lecture 1: Histology & Anatomy of the Circulatory System (Dr. S.Z. Babazadeh) - 50 MCQs",
                     questions: [
-                        { 
-                            q: "1. What percentage of the total blood volume is accommodated within the systemic veins, venules, and venous sinuses?", 
-                            options: ["13%", "64%", "84%", "9%"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "2. The pulmonary circulation accounts for approximately what percentage of total blood volume?", 
-                            options: ["9%", "64%", "13%", "7%"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "3. Which layer of the heart wall represents the anatomical homologue of the Tunica Adventitia of blood vessels?", 
-                            options: ["Endocardium", "Myocardium", "Epicardium (Visceral pericardium)", "Fibrous ring"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "4. In which layer of the heart wall are the specialized Purkinje fibers of the conduction system primarily located?", 
-                            options: ["Deep within the Myocardium", "Subepicardial connective tissue", "Fibrous trigone", "Subendocardial layer"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "5. What type of epithelial lining covers the luminal surface of the endocardium and the entire vascular tree?", 
-                            options: ["Simple cuboidal epithelium", "Simple squamous epithelium (Endothelium)", "Stratified squamous non-keratinized epithelium", "Pseudostratified ciliated columnar epithelium"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "6. What is the main structural function of the Chordae Tendineae attached to the papillary muscles?", 
-                            options: ["They pump oxygenated blood directly into coronary sulci", "They initiate ventricular depolarization impulses", "They prevent AV valve cusps from prolapsing/everting into the atria during systole", "They open the semilunar valves during diastole"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "7. Which component of the cardiac conduction system uniquely penetrates the cardiac fibrous skeleton to transmit impulses to the ventricles?", 
-                            options: ["Atrioventricular (AV) Bundle of His", "Sinoatrial (SA) node", "Bachmann's interatrial bundle", "Anterior internodal tract"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "8. What is the fundamental electrophysiological role of the cardiac fibrous skeleton?", 
-                            options: ["It accelerates impulses between atria and ventricles", "It acts as an electrical insulator, preventing random wave conduction between atria and ventricles", "It secretes natriuretic peptide hormones", "It serves as the primary cardiac pacemaker"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "9. Myoendocrine cardiocytes located predominantly in the atria produce and store which regulatory hormone in cytoplasmic granules?", 
-                            options: ["Vasopressin (Antidiuretic hormone)", "Angiotensin II", "Atrial Natriuretic Factor (ANF / ANP)", "Endothelin-1"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "10. What is the primary physiological trigger for the release of ANF (Atrial Natriuretic Factor) from atrial myocytes?", 
-                            options: ["Acute systemic hypotension", "Hyperkalemia and metabolic acidosis", "Severe hypovolemia", "Atrial wall stretch and elevated blood volume/hypervolemia"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "11. What is the physiological effect of Atrial Natriuretic Factor (ANF) on the kidneys and vasculature?", 
-                            options: ["Stimulates renal sodium/water excretion (natriuresis/diuresis) and lowers blood pressure", "Promotes sodium retention and increases peripheral vascular resistance", "Stimulates renin and aldosterone secretion", "Causes systemic arterial vasoconstriction"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "12. Where is the Sinoatrial (SA) Node anatomically situated in the heart?", 
-                            options: ["In the membranous interventricular septum", "At the junction of the Superior Vena Cava and the Right Atrium", "At the base of the left pulmonary veins", "Subendocardially in the floor of the left ventricle"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "13. The Atrioventricular (AV) Node is situated in the subendocardium of the interatrial septum within which landmark area?", 
-                            options: ["Fossa ovalis", "Coronary sinus opening", "Triangle of Koch (Koch's triangle)", "Crista terminalis"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "14. How are Purkinje fibers histologically distinguished from typical contractile cardiomyocytes?", 
-                            options: ["They are smaller with intensely dark myofibrils and no glycogen", "They lack cell membranes and form syncytial smooth muscle", "They are multi-nucleated skeletal muscle fibers", "They are larger, pale-staining due to abundant glycogen, with sparse peripheral myofibrils"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "15. Which intercellular junctions are abundant in the intercalated discs of Purkinje fibers to ensure rapid electrical transmission?", 
-                            options: ["Gap junctions (Nexus)", "Zonula occludens only", "Hemidesmosomes", "Tight junctions without channels"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "16. Which layer of the pericardial sac is directly attached to the external surface of the myocardium as the Epicardium?", 
-                            options: ["Fibrous pericardium", "Visceral layer of the serous pericardium", "Parietal layer of the serous pericardium", "Endocardium"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "17. Which nerve provides sensory innervation to the pericardium and originates from spinal segments C3-C5?", 
-                            options: ["Vagus nerve (CN X)", "Sympathetic cardiac nerve", "Phrenic nerve", "Left recurrent laryngeal nerve"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "18. The subepicardial loose connective tissue of the epicardium contains variable amounts of adipose tissue that accommodates:", 
-                            options: ["Pectinate muscles and trabeculae carneae", "Chordae tendineae and valve cusps", "Endocardial endothelial cushions", "Coronary blood vessels, autonomic nerve fibers, and ganglia"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "19. Histologically, heart valves consist of a fold of endocardium enclosing a core composed predominantly of:", 
-                            options: ["Dense irregular fibroelastic connective tissue", "Hyaline cartilage and bony lamellae", "Thick skeletal muscle fibers", "Simple adipose tissue without collagen"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "20. In the vascular wall architecture, where is the Internal Elastic Lamina (IEL) located?", 
-                            options: ["Between Tunica Media and Tunica Adventitia", "At the boundary between Tunica Intima and Tunica Media", "In the outermost layer of Tunica Adventitia", "Deep within the capillary basement membrane"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "21. Which cells in the Tunica Media of muscular arteries synthesize collagen, elastin, and extracellular ground substance?", 
-                            options: ["Endothelial cells", "Pericytes", "Vascular smooth muscle cells", "Adventitial fibroblasts only"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "22. What are the 'Vasa Vasorum' and in which vascular layer are they most prominent in large vessels?", 
-                            options: ["Lymphatic capillaries in the endothelium", "Smooth muscle sphincters of arterioles", "Nerve endings in the subendothelial zone", "A microvascular network supplying vessel walls, located primarily in the Tunica Adventitia"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "23. Unmyelinated sympathetic nerve fibers (Nervi Vasorum) in the adventitia of arteries release norepinephrine to stimulate:", 
-                            options: ["Vasoconstriction via vascular smooth muscle contraction", "Vasodilation of large conducting arteries", "Immediate breakdown of the internal elastic lamina", "Proliferation of endothelial cells"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "24. Rod-shaped cytoplasmic inclusion bodies unique to endothelial cells that store von Willebrand Factor (vWF) and P-selectin are called:", 
-                            options: ["Caveolae", "Weibel-Palade bodies", "Nissl granules", "Dense core neurosecretory granules"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "25. Which potent vasodilator is synthesized and released by vascular endothelial cells to relax underlying smooth muscle?", 
-                            options: ["Endothelin-1", "Thromboxane A2", "Nitric Oxide (NO)", "Angiotensin Converting Enzyme (ACE)"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "26. Which of the following is a potent vasoconstrictor peptide synthesized and secreted by endothelial cells?", 
-                            options: ["Prostacyclin (PGI2)", "Heparan sulfate", "Bradykinin", "Endothelin-1"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "27. What is the hallmark histological feature of the Tunica Media in Large Elastic (Conducting) Arteries like the Aorta?", 
-                            options: ["Concentric sheets of 40 to 70 fenestrated elastic lamellae interspersed with smooth muscle", "Absence of elastic fibers with purely skeletal muscle", "Single layer of smooth muscle and absence of intima", "Abundant venous valves within the lumen"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "28. What is the essential biomechanical role of the elastic recoil (Windkessel effect) in elastic arteries during cardiac diastole?", 
-                            options: ["To generate cardiac electrical pacemaking", "To maintain continuous peripheral blood flow and arterial diastolic blood pressure", "To produce red blood cells under high pressure", "To filter lymph returning to the heart"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "29. In which category of blood vessels is the Internal Elastic Lamina (IEL) most prominent, thick, and distinctly undulating (scalloped)?", 
-                            options: ["Large elastic arteries", "Capillaries", "Medium-sized (Muscular / Distributing) Arteries", "Postcapillary venules"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "30. The Tunica Media of medium muscular arteries contains up to how many concentric layers of circularly/spirally arranged smooth muscle cells?", 
-                            options: ["Only 1 to 2 layers", "Exactly 5 layers", "Over 150 layers", "Up to 40 layers"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "31. Which microvascular vessels act as the primary site of systemic vascular resistance (resistance vessels) regulating systemic blood pressure?", 
-                            options: ["Arterioles", "Large elastic arteries", "Capillaries", "Large venae cavae"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "32. Histologically, an arteriole is characterized by a Tunica Media consisting of how many layers of smooth muscle cells?", 
-                            options: ["10 to 20 layers", "1 to 3 layers", "More than 40 layers", "No smooth muscle layers"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "33. High-pressure baroreceptors monitoring systemic arterial blood pressure are located in which anatomical structures?", 
-                            options: ["Inferior Vena Cava and Hepatic Veins", "Pulmonary veins and left atrium", "Carotid Sinus (internal carotid artery) and Aortic Arch", "Thoracic duct and subclavian veins"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "34. Sensory afferent nerve impulses from the Carotid Sinus baroreceptors are transmitted to the brainstem primarily via which cranial nerve?", 
-                            options: ["Vagus nerve (CN X) exclusively", "Facial nerve (CN VII)", "Hypoglossal nerve (CN XII)", "Glossopharyngeal nerve (CN IX / Hering's nerve)"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "35. Chemoreceptors in the Carotid and Aortic bodies monitor arterial blood changes and respond strongly to:", 
-                            options: ["Hypoxia (low pO2), hypercapnia (high pCO2), and acidosis (low pH)", "Elevated blood glucose and hypernatremia", "Decreased blood temperature only", "Elevated albumin and high blood viscosity"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "36. In the Carotid Body, which cells act as the primary neuroendocrine chemosensory cells containing catecholamine vesicles?", 
-                            options: ["Type II (Sustentacular) supporting cells", "Type I (Glomus) cells", "Pericytes of capillaries", "Fibroblasts of the capsule"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "37. What is the initial event in the pathogenesis of Atherosclerosis?", 
-                            options: ["Rupture of the chordae tendineae", "Calcification of the Tunica Adventitia", "Endothelial injury and accumulation of modified low-density lipoproteins (LDL) in the Tunica Intima", "Hypertrophy of Purkinje conduction fibers"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "38. In an atheromatous plaque, 'Foam Cells' are lipid-laden cells predominantly derived from:", 
-                            options: ["Erythrocytes and platelets", "Neutrophils and mast cells", "Endothelial cells and lymphocytes", "Macrophages and transformed vascular smooth muscle cells"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "39. What is the major clinical catastrophe resulting from ulceration or rupture of an atherosclerotic plaque (fibrous cap)?", 
-                            options: ["Thrombus formation causing acute vascular occlusion and tissue infarction", "Development of AV node bypass tract", "Excessive secretion of ANF hormone", "Transformation of the artery into a muscular vein"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "40. A localized abnormal permanent dilation of an arterial wall caused by acquired or congenital weakness of the media is termed an:", 
-                            options: ["Atheroma", "Aneurysm", "Varicocele", "Arteriosclerosis obliterans"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "41. Why are veins referred to as 'capacitance vessels' in hemodynamics?", 
-                            options: ["They generate the highest systolic blood pressure", "Their walls contain more elastic lamellae than the aorta", "They contain approximately 64-70% of total blood volume due to thin walls and large distensible lumens", "They possess continuous spontaneous peristaltic contractions"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "42. Venous valves are thin semilunar folds composed of which histological layer?", 
-                            options: ["Tunica Adventitia containing longitudinal muscle", "Tunica Media with thick circular smooth muscle", "Pericardial mesothelium", "Tunica Intima lined by endothelium with an inner core of fibroelastic tissue"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "43. In Large Veins (e.g., Inferior Vena Cava and Hepatic Portal Vein), which layer is the thickest and most well-developed, containing prominent longitudinal bundles of smooth muscle?", 
-                            options: ["Tunica Adventitia", "Tunica Media", "Tunica Intima", "Internal Elastic Lamina"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "44. Which microcirculatory vessels represent the principal site of leukocyte extravasation (diapedesis) and responsiveness to inflammatory mediators like histamine?", 
-                            options: ["Large elastic conducting arteries", "Postcapillary Venules", "Precapillary metarterioles", "Sinusoids of the liver"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "45. High Endothelial Venules (HEVs) with plump, cuboidal endothelial cells are specialized postcapillary venules found in:", 
-                            options: ["Renal glomeruli", "Adrenal medulla", "Secondary lymphoid organs (lymph nodes, tonsils, Peyer's patches) for lymphocyte homing", "Skeletal muscle interstitium"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "46. Which type of capillary possesses an unbroken endothelial lining, continuous basal lamina, tight junctions (zonula occludens), and is prominent in the Central Nervous System (Blood-Brain Barrier)?", 
-                            options: ["Sinusoidal (discontinuous) capillaries", "Fenestrated capillaries without diaphragm", "Fenestrated capillaries with diaphragm", "Continuous (non-fenestrated) capillaries"], 
-                            correct: 3 
-                        },
-                        { 
-                            q: "47. Where are Fenestrated Capillaries without diaphragms and featuring a notably thick basement membrane located?", 
-                            options: ["Renal glomeruli (Glomerular filtration barrier)", "Endocrine glands (thyroid, pituitary)", "Mucosa of the small intestine", "Exocrine pancreas"], 
-                            correct: 0 
-                        },
-                        { 
-                            q: "48. Sinusoidal (Discontinuous) capillaries with wide tortuous lumens, large endothelial gaps, and incomplete or absent basal lamina are characteristic of:", 
-                            options: ["Brain cortex and spinal cord", "Liver, Spleen, and Bone Marrow", "Skeletal and cardiac muscle", "Lungs and respiratory bronchioles"], 
-                            correct: 1 
-                        },
-                        { 
-                            q: "49. Arteriovenous Anastomoses (AV shunts / Glomus bodies) in thermoregulatory areas (fingertips, ears, nose) function primarily to:", 
-                            options: ["Facilitate nutrient absorption from tissue spaces", "Generate white blood cells during infection", "Bypass the capillary bed to regulate body temperature and blood flow", "Produce systemic vascular resistance for endocrine organs"], 
-                            correct: 2 
-                        },
-                        { 
-                            q: "50. Where does the Thoracic Duct (the main lymphatic vessel of the body) empty lymph back into the venous bloodstream?", 
-                            options: ["Directly into the Right Atrium of the heart", "Directly into the Inferior Vena Cava", "Into the Hepatic Portal Vein", "At the junction of the Left Internal Jugular and Left Subclavian Veins (Left venous angle)"], 
-                            correct: 3 
-                        }
+                        { q: "1. What percentage of the total blood volume is accommodated within the systemic veins, venules, and venous sinuses?", options: ["13%", "64%", "84%", "9%"], correct: 1 },
+                        { q: "2. The pulmonary circulation accounts for approximately what percentage of total blood volume?", options: ["9%", "64%", "13%", "7%"], correct: 0 },
+                        { q: "3. Which layer of the heart wall represents the anatomical homologue of the Tunica Adventitia of blood vessels?", options: ["Endocardium", "Myocardium", "Epicardium (Visceral pericardium)", "Fibrous ring"], correct: 2 },
+                        { q: "4. In which layer of the heart wall are the specialized Purkinje fibers of the conduction system primarily located?", options: ["Deep within the Myocardium", "Subepicardial connective tissue", "Fibrous trigone", "Subendocardial layer"], correct: 3 },
+                        { q: "5. What type of epithelial lining covers the luminal surface of the endocardium and the entire vascular tree?", options: ["Simple cuboidal epithelium", "Simple squamous epithelium (Endothelium)", "Stratified squamous non-keratinized epithelium", "Pseudostratified ciliated columnar epithelium"], correct: 1 },
+                        { q: "6. What is the main structural function of the Chordae Tendineae attached to the papillary muscles?", options: ["They pump oxygenated blood directly into coronary sulci", "They initiate ventricular depolarization impulses", "They prevent AV valve cusps from prolapsing/everting into the atria during systole", "They open the semilunar valves during diastole"], correct: 2 },
+                        { q: "7. Which component of the cardiac conduction system uniquely penetrates the cardiac fibrous skeleton to transmit impulses to the ventricles?", options: ["Atrioventricular (AV) Bundle of His", "Sinoatrial (SA) node", "Bachmann's interatrial bundle", "Anterior internodal tract"], correct: 0 },
+                        { q: "8. What is the fundamental electrophysiological role of the cardiac fibrous skeleton?", options: ["It accelerates impulses between atria and ventricles", "It acts as an electrical insulator, preventing random wave conduction between atria and ventricles", "It secretes natriuretic peptide hormones", "It serves as the primary cardiac pacemaker"], correct: 1 },
+                        { q: "9. Myoendocrine cardiocytes located predominantly in the atria produce and store which regulatory hormone in cytoplasmic granules?", options: ["Vasopressin (Antidiuretic hormone)", "Angiotensin II", "Atrial Natriuretic Factor (ANF / ANP)", "Endothelin-1"], correct: 2 },
+                        { q: "10. What is the primary physiological trigger for the release of ANF (Atrial Natriuretic Factor) from atrial myocytes?", options: ["Acute systemic hypotension", "Hyperkalemia and metabolic acidosis", "Severe hypovolemia", "Atrial wall stretch and elevated blood volume/hypervolemia"], correct: 3 },
+                        { q: "11. What is the physiological effect of Atrial Natriuretic Factor (ANF) on the kidneys and vasculature?", options: ["Stimulates renal sodium/water excretion (natriuresis/diuresis) and lowers blood pressure", "Promotes sodium retention and increases peripheral vascular resistance", "Stimulates renin and aldosterone secretion", "Causes systemic arterial vasoconstriction"], correct: 0 },
+                        { q: "12. Where is the Sinoatrial (SA) Node anatomically situated in the heart?", options: ["In the membranous interventricular septum", "At the junction of the Superior Vena Cava and the Right Atrium", "At the base of the left pulmonary veins", "Subendocardially in the floor of the left ventricle"], correct: 1 },
+                        { q: "13. The Atrioventricular (AV) Node is situated in the subendocardium of the interatrial septum within which landmark area?", options: ["Fossa ovalis", "Coronary sinus opening", "Triangle of Koch (Koch's triangle)", "Crista terminalis"], correct: 2 },
+                        { q: "14. How are Purkinje fibers histologically distinguished from typical contractile cardiomyocytes?", options: ["They are smaller with intensely dark myofibrils and no glycogen", "They lack cell membranes and form syncytial smooth muscle", "They are multi-nucleated skeletal muscle fibers", "They are larger, pale-staining due to abundant glycogen, with sparse peripheral myofibrils"], correct: 3 },
+                        { q: "15. Which intercellular junctions are abundant in the intercalated discs of Purkinje fibers to ensure rapid electrical transmission?", options: ["Gap junctions (Nexus)", "Zonula occludens only", "Hemidesmosomes", "Tight junctions without channels"], correct: 0 },
+                        { q: "16. Which layer of the pericardial sac is directly attached to the external surface of the myocardium as the Epicardium?", options: ["Fibrous pericardium", "Visceral layer of the serous pericardium", "Parietal layer of the serous pericardium", "Endocardium"], correct: 1 },
+                        { q: "17. Which nerve provides sensory innervation to the pericardium and originates from spinal segments C3-C5?", options: ["Vagus nerve (CN X)", "Sympathetic cardiac nerve", "Phrenic nerve", "Left recurrent laryngeal nerve"], correct: 2 },
+                        { q: "18. The subepicardial loose connective tissue of the epicardium contains variable amounts of adipose tissue that accommodates:", options: ["Pectinate muscles and trabeculae carneae", "Chordae tendineae and valve cusps", "Endocardial endothelial cushions", "Coronary blood vessels, autonomic nerve fibers, and ganglia"], correct: 3 },
+                        { q: "19. Histologically, heart valves consist of a fold of endocardium enclosing a core composed predominantly of:", options: ["Dense irregular fibroelastic connective tissue", "Hyaline cartilage and bony lamellae", "Thick skeletal muscle fibers", "Simple adipose tissue without collagen"], correct: 0 },
+                        { q: "20. In the vascular wall architecture, where is the Internal Elastic Lamina (IEL) located?", options: ["Between Tunica Media and Tunica Adventitia", "At the boundary between Tunica Intima and Tunica Media", "In the outermost layer of Tunica Adventitia", "Deep within the capillary basement membrane"], correct: 1 },
+                        { q: "21. Which cells in the Tunica Media of muscular arteries synthesize collagen, elastin, and extracellular ground substance?", options: ["Endothelial cells", "Pericytes", "Vascular smooth muscle cells", "Adventitial fibroblasts only"], correct: 2 },
+                        { q: "22. What are the 'Vasa Vasorum' and in which vascular layer are they most prominent in large vessels?", options: ["Lymphatic capillaries in the endothelium", "Smooth muscle sphincters of arterioles", "Nerve endings in the subendothelial zone", "A microvascular network supplying vessel walls, located primarily in the Tunica Adventitia"], correct: 3 },
+                        { q: "23. Unmyelinated sympathetic nerve fibers (Nervi Vasorum) in the adventitia of arteries release norepinephrine to stimulate:", options: ["Vasoconstriction via vascular smooth muscle contraction", "Vasodilation of large conducting arteries", "Immediate breakdown of the internal elastic lamina", "Proliferation of endothelial cells"], correct: 0 },
+                        { q: "24. Rod-shaped cytoplasmic inclusion bodies unique to endothelial cells that store von Willebrand Factor (vWF) and P-selectin are called:", options: ["Caveolae", "Weibel-Palade bodies", "Nissl granules", "Dense core neurosecretory granules"], correct: 1 },
+                        { q: "25. Which potent vasodilator is synthesized and released by vascular endothelial cells to relax underlying smooth muscle?", options: ["Endothelin-1", "Thromboxane A2", "Nitric Oxide (NO)", "Angiotensin Converting Enzyme (ACE)"], correct: 2 },
+                        { q: "26. Which of the following is a potent vasoconstrictor peptide synthesized and secreted by endothelial cells?", options: ["Prostacyclin (PGI2)", "Heparan sulfate", "Bradykinin", "Endothelin-1"], correct: 3 },
+                        { q: "27. What is the hallmark histological feature of the Tunica Media in Large Elastic (Conducting) Arteries like the Aorta?", options: ["Concentric sheets of 40 to 70 fenestrated elastic lamellae interspersed with smooth muscle", "Absence of elastic fibers with purely skeletal muscle", "Single layer of smooth muscle and absence of intima", "Abundant venous valves within the lumen"], correct: 0 },
+                        { q: "28. What is the essential biomechanical role of the elastic recoil (Windkessel effect) in elastic arteries during cardiac diastole?", options: ["To generate cardiac electrical pacemaking", "To maintain continuous peripheral blood flow and arterial diastolic blood pressure", "To produce red blood cells under high pressure", "To filter lymph returning to the heart"], correct: 1 },
+                        { q: "29. In which category of blood vessels is the Internal Elastic Lamina (IEL) most prominent, thick, and distinctly undulating (scalloped)?", options: ["Large elastic arteries", "Capillaries", "Medium-sized (Muscular / Distributing) Arteries", "Postcapillary venules"], correct: 2 },
+                        { q: "30. The Tunica Media of medium muscular arteries contains up to how many concentric layers of circularly/spirally arranged smooth muscle cells?", options: ["Only 1 to 2 layers", "Exactly 5 layers", "Over 150 layers", "Up to 40 layers"], correct: 3 },
+                        { q: "31. Which microvascular vessels act as the primary site of systemic vascular resistance (resistance vessels) regulating systemic blood pressure?", options: ["Arterioles", "Large elastic arteries", "Capillaries", "Large venae cavae"], correct: 0 },
+                        { q: "32. Histologically, an arteriole is characterized by a Tunica Media consisting of how many layers of smooth muscle cells?", options: ["10 to 20 layers", "1 to 3 layers", "More than 40 layers", "No smooth muscle layers"], correct: 1 },
+                        { q: "33. High-pressure baroreceptors monitoring systemic arterial blood pressure are located in which anatomical structures?", options: ["Inferior Vena Cava and Hepatic Veins", "Pulmonary veins and left atrium", "Carotid Sinus (internal carotid artery) and Aortic Arch", "Thoracic duct and subclavian veins"], correct: 2 },
+                        { q: "34. Sensory afferent nerve impulses from the Carotid Sinus baroreceptors are transmitted to the brainstem primarily via which cranial nerve?", options: ["Vagus nerve (CN X) exclusively", "Facial nerve (CN VII)", "Hypoglossal nerve (CN XII)", "Glossopharyngeal nerve (CN IX / Hering's nerve)"], correct: 3 },
+                        { q: "35. Chemoreceptors in the Carotid and Aortic bodies monitor arterial blood changes and respond strongly to:", options: ["Hypoxia (low pO2), hypercapnia (high pCO2), and acidosis (low pH)", "Elevated blood glucose and hypernatremia", "Decreased blood temperature only", "Elevated albumin and high blood viscosity"], correct: 0 },
+                        { q: "36. In the Carotid Body, which cells act as the primary neuroendocrine chemosensory cells containing catecholamine vesicles?", options: ["Type II (Sustentacular) supporting cells", "Type I (Glomus) cells", "Pericytes of capillaries", "Fibroblasts of the capsule"], correct: 1 },
+                        { q: "37. What is the initial event in the pathogenesis of Atherosclerosis?", options: ["Rupture of the chordae tendineae", "Calcification of the Tunica Adventitia", "Endothelial injury and accumulation of modified low-density lipoproteins (LDL) in the Tunica Intima", "Hypertrophy of Purkinje conduction fibers"], correct: 2 },
+                        { q: "38. In an atheromatous plaque, 'Foam Cells' are lipid-laden cells predominantly derived from:", options: ["Erythrocytes and platelets", "Neutrophils and mast cells", "Endothelial cells and lymphocytes", "Macrophages and transformed vascular smooth muscle cells"], correct: 3 },
+                        { q: "39. What is the major clinical catastrophe resulting from ulceration or rupture of an atherosclerotic plaque (fibrous cap)?", options: ["Thrombus formation causing acute vascular occlusion and tissue infarction", "Development of AV node bypass tract", "Excessive secretion of ANF hormone", "Transformation of the artery into a muscular vein"], correct: 0 },
+                        { q: "40. A localized abnormal permanent dilation of an arterial wall caused by acquired or congenital weakness of the media is termed an:", options: ["Atheroma", "Aneurysm", "Varicocele", "Arteriosclerosis obliterans"], correct: 1 },
+                        { q: "41. Why are veins referred to as 'capacitance vessels' in hemodynamics?", options: ["They generate the highest systolic blood pressure", "Their walls contain more elastic lamellae than the aorta", "They contain approximately 64-70% of total blood volume due to thin walls and large distensible lumens", "They possess continuous spontaneous peristaltic contractions"], correct: 2 },
+                        { q: "42. Venous valves are thin semilunar folds composed of which histological layer?", options: ["Tunica Adventitia containing longitudinal muscle", "Tunica Media with thick circular smooth muscle", "Pericardial mesothelium", "Tunica Intima lined by endothelium with an inner core of fibroelastic tissue"], correct: 3 },
+                        { q: "43. In Large Veins (e.g., Inferior Vena Cava and Hepatic Portal Vein), which layer is the thickest and most well-developed, containing prominent longitudinal bundles of smooth muscle?", options: ["Tunica Adventitia", "Tunica Media", "Tunica Intima", "Internal Elastic Lamina"], correct: 0 },
+                        { q: "44. Which microcirculatory vessels represent the principal site of leukocyte extravasation (diapedesis) and responsiveness to inflammatory mediators like histamine?", options: ["Large elastic conducting arteries", "Postcapillary Venules", "Precapillary metarterioles", "Sinusoids of the liver"], correct: 1 },
+                        { q: "45. High Endothelial Venules (HEVs) with plump, cuboidal endothelial cells are specialized postcapillary venules found in:", options: ["Renal glomeruli", "Adrenal medulla", "Secondary lymphoid organs (lymph nodes, tonsils, Peyer's patches) for lymphocyte homing", "Skeletal muscle interstitium"], correct: 2 },
+                        { q: "46. Which type of capillary possesses an unbroken endothelial lining, continuous basal lamina, tight junctions (zonula occludens), and is prominent in the Central Nervous System (Blood-Brain Barrier)?", options: ["Sinusoidal (discontinuous) capillaries", "Fenestrated capillaries without diaphragm", "Fenestrated capillaries with diaphragm", "Continuous (non-fenestrated) capillaries"], correct: 3 },
+                        { q: "47. Where are Fenestrated Capillaries without diaphragms and featuring a notably thick basement membrane located?", options: ["Renal glomeruli (Glomerular filtration barrier)", "Endocrine glands (thyroid, pituitary)", "Mucosa of the small intestine", "Exocrine pancreas"], correct: 0 },
+                        { q: "48. Sinusoidal (Discontinuous) capillaries with wide tortuous lumens, large endothelial gaps, and incomplete or absent basal lamina are characteristic of:", options: ["Brain cortex and spinal cord", "Liver, Spleen, and Bone Marrow", "Skeletal and cardiac muscle", "Lungs and respiratory bronchioles"], correct: 1 },
+                        { q: "49. Arteriovenous Anastomoses (AV shunts / Glomus bodies) in thermoregulatory areas (fingertips, ears, nose) function primarily to:", options: ["Facilitate nutrient absorption from tissue spaces", "Generate white blood cells during infection", "Bypass the capillary bed to regulate body temperature and blood flow", "Produce systemic vascular resistance for endocrine organs"], correct: 2 },
+                        { q: "50. Where does the Thoracic Duct (the main lymphatic vessel of the body) empty lymph back into the venous bloodstream?", options: ["Directly into the Right Atrium of the heart", "Directly into the Inferior Vena Cava", "Into the Hepatic Portal Vein", "At the junction of the Left Internal Jugular and Left Subclavian Veins (Left venous angle)"], correct: 3 }
                     ]
                 }
             ]
         };
 
-        // إدارة الحالة والتنقل
+        // دمج الأسئلة المخصصة مع الأساسية
+        function getMergedQuestionsDB() {
+            let customDB = {};
+            try {
+                customDB = JSON.parse(localStorage.getItem('babol_custom_exams_db') || '{}');
+            } catch(e) {}
+
+            let merged = JSON.parse(JSON.stringify(builtInQuestionsDB));
+            for (let subId in customDB) {
+                if (!merged[subId]) merged[subId] = [];
+                merged[subId] = [...merged[subId], ...customDB[subId]];
+            }
+            return merged;
+        }
+
+        // الحالة العامة
         let currentUserProfile = null;
         let isSignup = false;
         let activeSubjectId = null;
@@ -630,11 +512,13 @@
         window.addEventListener('DOMContentLoaded', () => {
             loadSavedProfile();
             renderSubjects();
+            populateAdminSubjects();
+            adminAddQuestionField();
             showView('home-view');
         });
 
         function showView(viewId) {
-            const views = ['home-view', 'exam-select-view', 'auth-view', 'quiz-view', 'result-view', 'review-view', 'dashboard-view'];
+            const views = ['home-view', 'exam-select-view', 'admin-view', 'auth-view', 'quiz-view', 'result-view', 'review-view', 'dashboard-view'];
             views.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -649,6 +533,118 @@
             document.getElementById('toast-msg').textContent = msg;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function promptAdminAccess() {
+            const pin = prompt("أدخل رمز المشرف السري (Admin PIN):", "");
+            if (pin === ADMIN_PIN) {
+                showToast("مرحباً بك في لوحة الإدارة");
+                showView('admin-view');
+            } else if (pin !== null) {
+                showToast("رمز المشرف غير صحيح!");
+            }
+        }
+
+        function populateAdminSubjects() {
+            const select = document.getElementById('admin-subject-select');
+            select.innerHTML = '';
+            subjectsData.forEach(s => {
+                select.innerHTML += `<option value="${s.id}">#${s.id} - ${s.en} (${s.ar})</option>`;
+            });
+        }
+
+        let adminQCount = 0;
+        function adminAddQuestionField() {
+            adminQCount++;
+            const container = document.getElementById('admin-questions-list');
+            const qDiv = document.createElement('div');
+            qDiv.className = "bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-4 admin-q-item";
+            qDiv.id = `admin-q-${adminQCount}`;
+            qDiv.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-dark text-sm">السؤال #${adminQCount}</span>
+                    ${adminQCount > 1 ? `<button type="button" onclick="this.closest('.admin-q-item').remove(); updateAdminQCounter();" class="text-red-500 hover:text-red-700 text-xs font-bold">حذف السؤال</button>` : ''}
+                </div>
+                <div>
+                    <input type="text" required placeholder="Question text (in English)..." class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 font-english text-sm focus:outline-none focus:border-primary admin-q-text">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="admin-correct-${adminQCount}" value="0" checked class="w-4 h-4 text-primary">
+                        <input type="text" required placeholder="Option A..." class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 font-english text-xs md:text-sm admin-opt-0">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="admin-correct-${adminQCount}" value="1" class="w-4 h-4 text-primary">
+                        <input type="text" required placeholder="Option B..." class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 font-english text-xs md:text-sm admin-opt-1">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="admin-correct-${adminQCount}" value="2" class="w-4 h-4 text-primary">
+                        <input type="text" required placeholder="Option C..." class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 font-english text-xs md:text-sm admin-opt-2">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="admin-correct-${adminQCount}" value="3" class="w-4 h-4 text-primary">
+                        <input type="text" required placeholder="Option D..." class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 font-english text-xs md:text-sm admin-opt-3">
+                    </div>
+                </div>
+            `;
+            container.appendChild(qDiv);
+            updateAdminQCounter();
+        }
+
+        function updateAdminQCounter() {
+            const count = document.querySelectorAll('.admin-q-item').length;
+            document.getElementById('admin-questions-count').textContent = count;
+        }
+
+        function handleSaveNewExam(e) {
+            e.preventDefault();
+            const subjectId = document.getElementById('admin-subject-select').value;
+            const examTitle = document.getElementById('admin-exam-title').value.trim();
+            const qItems = document.querySelectorAll('.admin-q-item');
+
+            let questions = [];
+            qItems.forEach((item, idx) => {
+                const qText = item.querySelector('.admin-q-text').value.trim();
+                const optA = item.querySelector('.admin-opt-0').value.trim();
+                const optB = item.querySelector('.admin-opt-1').value.trim();
+                const optC = item.querySelector('.admin-opt-2').value.trim();
+                const optD = item.querySelector('.admin-opt-3').value.trim();
+                const correctRadio = item.querySelector(`input[type="radio"]:checked`);
+                const correct = correctRadio ? parseInt(correctRadio.value) : 0;
+
+                questions.push({
+                    q: `${idx + 1}. ${qText}`,
+                    options: [optA, optB, optC, optD],
+                    correct: correct
+                });
+            });
+
+            if (questions.length === 0) {
+                showToast("يرجى إضافة سؤال واحد على الأقل");
+                return;
+            }
+
+            let customDB = {};
+            try {
+                customDB = JSON.parse(localStorage.getItem('babol_custom_exams_db') || '{}');
+            } catch(e) {}
+
+            if (!customDB[subjectId]) customDB[subjectId] = [];
+            customDB[subjectId].push({
+                examId: Date.now(),
+                examTitle: examTitle,
+                questions: questions
+            });
+
+            localStorage.setItem('babol_custom_exams_db', JSON.stringify(customDB));
+
+            showToast("تم نشر الامتحان بنجاح!");
+            document.getElementById('add-exam-form').reset();
+            document.getElementById('admin-questions-list').innerHTML = '';
+            adminQCount = 0;
+            adminAddQuestionField();
+            renderSubjects();
+            showView('home-view');
         }
 
         function loadSavedProfile() {
@@ -709,11 +705,18 @@
             if (!container) return;
             container.innerHTML = '';
             
+            const fullDB = getMergedQuestionsDB();
+
             list.forEach(sub => {
-                const hasExams = questionsDB[sub.id] && questionsDB[sub.id].length > 0;
+                const exams = fullDB[sub.id] || [];
+                const hasExams = exams.length > 0;
                 let badge = sub.type ? `<span class="bg-sky-100 text-primary text-xs font-bold px-2.5 py-0.5 rounded-lg">${sub.type}</span>` : '';
+                
+                let totalQuestionsCount = 0;
+                exams.forEach(ex => totalQuestionsCount += ex.questions.length);
+
                 let statusBadge = hasExams 
-                    ? `<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5"><i class="ph-bold ph-check-circle"></i> متوفر 50 سؤال (English)</span>` 
+                    ? `<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5"><i class="ph-bold ph-check-circle"></i> متوفر ${exams.length} امتحان (${totalQuestionsCount} سؤال)</span>` 
                     : `<span class="bg-slate-100 text-slate-400 text-xs font-bold px-2 py-0.5 rounded-lg">قريباً</span>`;
 
                 container.innerHTML += `
@@ -754,9 +757,10 @@
             }
 
             const subject = subjectsData.find(s => s.id === subjectId);
-            const exams = questionsDB[subjectId];
+            const fullDB = getMergedQuestionsDB();
+            const exams = fullDB[subjectId] || [];
 
-            if (!exams || exams.length === 0) {
+            if (exams.length === 0) {
                 showToast(`بنك أسئلة مادة (${subject.en}) قيد الإعداد والإضافة!`);
                 return;
             }
@@ -773,7 +777,7 @@
                     listContainer.innerHTML += `
                         <div onclick="startQuiz(${idx})" class="p-5 rounded-2xl border-2 border-slate-100 hover:border-primary bg-slate-50/50 hover:bg-sky-50/50 cursor-pointer transition-all flex justify-between items-center group">
                             <div>
-                                <h4 class="font-bold text-dark text-base md:text-lg group-hover:text-primary transition-colors">${ex.examTitle}</h4>
+                                <h4 class="font-bold text-dark text-base md:text-lg group-hover:text-primary transition-colors font-english">${ex.examTitle}</h4>
                                 <span class="text-xs text-slate-400 font-bold mt-1 inline-block">${ex.questions.length} Questions • Duration: ${ex.questions.length} Mins</span>
                             </div>
                             <div class="w-10 h-10 rounded-xl bg-white group-hover:bg-primary group-hover:text-white flex items-center justify-center text-primary shadow-sm transition-all">
@@ -789,7 +793,8 @@
         function startQuiz(examIdx) {
             activeExamIndex = examIdx;
             const subject = subjectsData.find(s => s.id === activeSubjectId);
-            const exam = questionsDB[activeSubjectId][examIdx];
+            const fullDB = getMergedQuestionsDB();
+            const exam = fullDB[activeSubjectId][examIdx];
             
             activeQuestions = exam.questions;
             currentQuestionIdx = 0;
@@ -890,7 +895,8 @@
             document.getElementById('score-total').textContent = activeQuestions.length;
             
             const subject = subjectsData.find(s => s.id === activeSubjectId);
-            const exam = questionsDB[activeSubjectId][activeExamIndex];
+            const fullDB = getMergedQuestionsDB();
+            const exam = fullDB[activeSubjectId][activeExamIndex];
             document.getElementById('result-subject').textContent = `${subject.en} • ${exam.examTitle}`;
 
             const percentage = score / activeQuestions.length;
@@ -902,7 +908,7 @@
                 msgEl.textContent = "Good job! Review the incorrect questions to solidify knowledge 👍";
                 msgEl.className = "font-bold text-amber-600";
             } else {
-                msgEl.textContent = "Recommended to re-read Dr. Babazadeh's lecture slides thoroughly 📚";
+                msgEl.textContent = "Recommended to re-read the lecture slides thoroughly 📚";
                 msgEl.className = "font-bold text-red-600";
             }
 
@@ -927,7 +933,8 @@
 
         function showReview() {
             const subject = subjectsData.find(s => s.id === activeSubjectId);
-            const exam = questionsDB[activeSubjectId][activeExamIndex];
+            const fullDB = getMergedQuestionsDB();
+            const exam = fullDB[activeSubjectId][activeExamIndex];
             document.getElementById('review-subject-title').textContent = `${subject.en} • ${exam.examTitle}`;
 
             const container = document.getElementById('review-container');

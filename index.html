@@ -902,7 +902,10 @@
             const select = document.getElementById('admin-subject-select');
             select.innerHTML = '';
             subjectsData.forEach(s => {
-                select.innerHTML += `<option value="${s.id}">#${s.id} - ${s.en} (${s.ar})</option>`;
+                const option = document.createElement('option');
+                option.value = s.id;
+                option.textContent = `#${s.id} - ${s.en} (${s.ar})`;
+                select.appendChild(option);
             });
         };
 
